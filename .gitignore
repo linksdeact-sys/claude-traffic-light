@@ -1,0 +1,9 @@
+state.txt
+latest-debug.log
+direct-debug.log
+last-hook-event.jsonl
+*.tmp
+*.bak
+.claude.json
+settings.json
+settings.local.json
