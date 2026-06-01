@@ -95,10 +95,10 @@ Stop-OtherLights
                 <Ellipse x:Name="Dot" Grid.Row="0" Grid.Column="0" Width="10" Height="10" VerticalAlignment="Center" Fill="#0A84FF" />
                 <TextBlock x:Name="Title" Grid.Row="0" Grid.Column="1" Text="Claude" VerticalAlignment="Center"
                            FontFamily="Segoe UI" FontSize="13" Foreground="#596273" />
-                <Button x:Name="CloseButton" Grid.Row="0" Grid.Column="2" Content="x"
-                        VerticalAlignment="Center" HorizontalAlignment="Center" Width="22" Height="22"
-                        FontFamily="Segoe UI" FontSize="14" Foreground="#9AA3B2"
-                        Background="Transparent" BorderThickness="0" Padding="0" Cursor="Hand" Focusable="False" />
+                <TextBlock x:Name="CloseButton" Grid.Row="0" Grid.Column="2" Text="x"
+                           VerticalAlignment="Center" HorizontalAlignment="Center"
+                           FontFamily="Segoe UI" FontSize="14" Foreground="#A4ADBA"
+                           Cursor="Hand" Padding="6,1,6,3" />
 
                 <TextBlock x:Name="Status" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Text="DONE"
                            VerticalAlignment="Center" FontFamily="Segoe UI" FontSize="26" FontWeight="Bold"
@@ -123,6 +123,8 @@ $screen = [System.Windows.SystemParameters]::WorkArea
 $window.Left = $screen.Right - $window.Width - 18
 $window.Top = $screen.Top + 90
 
+$closeButton.Add_MouseEnter({ $closeButton.Foreground = New-Brush "#5F6B7A" })
+$closeButton.Add_MouseLeave({ $closeButton.Foreground = New-Brush "#A4ADBA" })
 $closeButton.Add_PreviewMouseLeftButtonDown({
     $_.Handled = $true
     $window.Close()
@@ -139,3 +141,4 @@ $timer.Add_Tick({ Set-LightTheme (Get-ClaudeState) })
 $window.Add_Loaded({ $script:currentState = ""; Set-LightTheme (Get-ClaudeState); $timer.Start() })
 $window.Add_Closed({ $timer.Stop() })
 [void]$window.ShowDialog()
+
