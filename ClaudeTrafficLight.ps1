@@ -4,6 +4,8 @@ Add-Type -AssemblyName WindowsBase
 
 $script:root = "D:\ClaudeTrafficLight"
 $script:stateFile = Join-Path $script:root "state.txt"
+$script:ownerPidFile = Join-Path $script:root "owner.pid"
+$script:hasOwner = Test-Path -LiteralPath $script:ownerPidFile
 
 function Stop-OtherLights {
     try {
@@ -27,6 +29,18 @@ function Get-ClaudeState {
     if ($flag -match 'ACTION') { return "yellow" }
     if ($flag -match 'RUNNING') { return "green" }
     return "blue"
+}
+
+function Test-OwnerAlive {
+    if (-not $script:hasOwner) { return $true }
+    if (-not (Test-Path -LiteralPath $script:ownerPidFile)) { return $false }
+
+    try {
+        $ownerPid = [int](Get-Content -LiteralPath $script:ownerPidFile -Raw -ErrorAction Stop).Trim()
+        return $null -ne (Get-Process -Id $ownerPid -ErrorAction SilentlyContinue)
+    } catch {
+        return $false
+    }
 }
 
 function New-Brush([string]$hex) {
@@ -137,7 +151,13 @@ $window.Add_MouseLeftButtonDown({
 
 $timer = [System.Windows.Threading.DispatcherTimer]::new()
 $timer.Interval = [TimeSpan]::FromMilliseconds(80)
-$timer.Add_Tick({ Set-LightTheme (Get-ClaudeState) })
+$timer.Add_Tick({
+    if (-not (Test-OwnerAlive)) {
+        $window.Close()
+        return
+    }
+    Set-LightTheme (Get-ClaudeState)
+})
 $window.Add_Loaded({ $script:currentState = ""; Set-LightTheme (Get-ClaudeState); $timer.Start() })
 $window.Add_Closed({ $timer.Stop() })
 [void]$window.ShowDialog()
