@@ -2,7 +2,7 @@ Add-Type -AssemblyName PresentationFramework
 Add-Type -AssemblyName PresentationCore
 Add-Type -AssemblyName WindowsBase
 
-$script:root = "D:\ClaudeTrafficLight"
+$script:root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $script:stateFile = Join-Path $script:root "state.txt"
 $script:ownerPidFile = Join-Path $script:root "owner.pid"
 $script:hasOwner = Test-Path -LiteralPath $script:ownerPidFile

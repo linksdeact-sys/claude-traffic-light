@@ -1,4 +1,4 @@
-$root = 'D:\ClaudeTrafficLight'
+$root = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 $stateFile = Join-Path $root 'state.txt'
 $eventFile = Join-Path $root 'last-hook-event.jsonl'
 if (-not (Test-Path -LiteralPath $root)) { New-Item -ItemType Directory -Force -Path $root | Out-Null }

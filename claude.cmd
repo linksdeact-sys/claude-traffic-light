@@ -1,3 +1,3 @@
-@echo off
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "D:\ClaudeTrafficLight\Start-ClaudeWithLight.ps1" %*
-exit /b %ERRORLEVEL%
+@echo off
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0Start-ClaudeWithLight.ps1" %*
+exit /b %ERRORLEVEL%

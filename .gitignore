@@ -7,3 +7,5 @@ last-hook-event.jsonl
 .claude.json
 settings.json
 settings.local.json
+config.json
+owner.pid
