@@ -9,3 +9,5 @@ settings.json
 settings.local.json
 config.json
 owner.pid
+instances/
+logs/

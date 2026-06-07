@@ -8,6 +8,14 @@ Windows 上给 Claude Code 用的小状态灯。
 
 窗口是一个 iOS 风格的小浮窗，会跟着 `claude` 一起启动，退出 Claude 后也会自动关闭。
 
+支持同时打开多个 Claude Code：
+
+- 每个 Claude 会话显示为一行
+- 每一行显示自己的状态
+- 点击某一行，会尝试把对应的终端窗口拉到最前面
+- 单个 Claude 退出时，只移除自己的那一行
+- 所有 Claude 都退出后，状态灯才会自动关闭
+
 ## 一键安装
 
 打开 PowerShell，粘贴这一行：
@@ -99,6 +107,12 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command "$s = irm https://raw.git
 - `Stop-ClaudeLights.ps1`：关闭状态灯
 - `hooks/Set-ClaudeLightState.ps1`：Claude hooks 状态写入
 - `hooks/ClaudePermissionHook.ps1`：权限 hook，安全操作自动放行，危险操作保留确认
+
+运行时会生成：
+
+- `instances/`：每个 Claude 会话一份状态文件
+- `logs/`：每个 Claude 会话一份 debug log
+- `last-hook-event.jsonl`：hook 事件日志
 
 ## 权限逻辑
 
