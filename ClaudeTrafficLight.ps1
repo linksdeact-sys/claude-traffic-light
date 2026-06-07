@@ -35,13 +35,13 @@ function New-Brush([string]$hex) {
 function Get-StateStyle([string]$state) {
     switch -Regex ($state) {
         "ACTION" {
-            return [pscustomobject]@{ Accent = "#FFCC00"; Soft = "#FFF9DE"; Text = "ACTION"; Hint = "needs you" }
+            return [pscustomobject]@{ Accent = "#F5B700"; Soft = "#FFFBEB"; Text = "ACTION"; Hint = "needs you" }
         }
         "RUNNING" {
-            return [pscustomobject]@{ Accent = "#34C759"; Soft = "#F2FFF6"; Text = "RUNNING"; Hint = "working" }
+            return [pscustomobject]@{ Accent = "#22C55E"; Soft = "#F7FEFA"; Text = "RUNNING"; Hint = "working" }
         }
         default {
-            return [pscustomobject]@{ Accent = "#0A84FF"; Soft = "#F7FAFF"; Text = "DONE"; Hint = "idle" }
+            return [pscustomobject]@{ Accent = "#3B82F6"; Soft = "#F8FAFF"; Text = "DONE"; Hint = "idle" }
         }
     }
 }
@@ -140,62 +140,61 @@ function New-SessionRow([object]$record, [int]$index) {
     $style = Get-StateStyle ([string]$record.state)
 
     $row = New-Object System.Windows.Controls.Border
-    $row.Height = 26
-    $row.Margin = [System.Windows.Thickness]::new(0, 5, 0, 0)
-    $row.CornerRadius = [System.Windows.CornerRadius]::new(11)
-    $row.BorderThickness = [System.Windows.Thickness]::new(1)
-    $row.BorderBrush = New-Brush "#E4EAF2"
-    $row.Background = New-Brush $style.Soft
+    $row.Height = 30
+    $row.Margin = [System.Windows.Thickness]::new(0, 1, 0, 1)
+    $row.CornerRadius = [System.Windows.CornerRadius]::new(9)
+    $row.BorderThickness = [System.Windows.Thickness]::new(0)
+    $row.Background = [System.Windows.Media.Brushes]::Transparent
     $row.Cursor = [System.Windows.Input.Cursors]::Hand
     $row.Tag = $record
 
     $grid = New-Object System.Windows.Controls.Grid
-    $grid.Margin = [System.Windows.Thickness]::new(8, 0, 8, 0)
-    $grid.ColumnDefinitions.Add((New-Object System.Windows.Controls.ColumnDefinition -Property @{ Width = [System.Windows.GridLength]::new(8) })) | Out-Null
+    $grid.Margin = [System.Windows.Thickness]::new(10, 0, 10, 0)
+    $grid.ColumnDefinitions.Add((New-Object System.Windows.Controls.ColumnDefinition -Property @{ Width = [System.Windows.GridLength]::new(14) })) | Out-Null
     $grid.ColumnDefinitions.Add((New-Object System.Windows.Controls.ColumnDefinition -Property @{ Width = [System.Windows.GridLength]::new(1, [System.Windows.GridUnitType]::Star) })) | Out-Null
-    $grid.ColumnDefinitions.Add((New-Object System.Windows.Controls.ColumnDefinition -Property @{ Width = [System.Windows.GridLength]::new(58) })) | Out-Null
+    $grid.ColumnDefinitions.Add((New-Object System.Windows.Controls.ColumnDefinition -Property @{ Width = [System.Windows.GridLength]::new(48) })) | Out-Null
 
-    $bar = New-Object System.Windows.Shapes.Rectangle
-    $bar.Width = 5
-    $bar.Height = 16
-    $bar.RadiusX = 3
-    $bar.RadiusY = 3
-    $bar.VerticalAlignment = [System.Windows.VerticalAlignment]::Center
-    $bar.Fill = New-Brush $style.Accent
-    [System.Windows.Controls.Grid]::SetColumn($bar, 0)
+    $dot = New-Object System.Windows.Shapes.Ellipse
+    $dot.Width = 7
+    $dot.Height = 7
+    $dot.VerticalAlignment = [System.Windows.VerticalAlignment]::Center
+    $dot.Fill = New-Brush $style.Accent
+    [System.Windows.Controls.Grid]::SetColumn($dot, 0)
 
     $name = if ($record.title) { [string]$record.title } else { "Claude" }
     $shortId = if ($record.id) { ([string]$record.id).Substring(0, [Math]::Min(6, ([string]$record.id).Length)) } else { "session" }
+    if ($name -match "^Claude\s+[0-9a-fA-F]{6}\s+-\s+(.+)$") {
+        $name = $Matches[1]
+    }
     $label = New-Object System.Windows.Controls.TextBlock
-    $label.Text = "#{0} {1}" -f $index, $name
+    $label.Text = "{0}. {1}" -f $index, $name
     $label.VerticalAlignment = [System.Windows.VerticalAlignment]::Center
-    $label.Margin = [System.Windows.Thickness]::new(8, 0, 0, 0)
+    $label.Margin = [System.Windows.Thickness]::new(4, 0, 0, 0)
     $label.FontFamily = "Segoe UI"
-    $label.FontSize = 11
-    $label.Foreground = New-Brush "#293142"
+    $label.FontSize = 12
+    $label.Foreground = New-Brush "#1F2937"
     $label.TextTrimming = [System.Windows.TextTrimming]::CharacterEllipsis
     [System.Windows.Controls.Grid]::SetColumn($label, 1)
 
     $statusText = New-Object System.Windows.Controls.TextBlock
-    $statusText.Text = $style.Text
+    $statusText.Text = $style.Hint
     $statusText.VerticalAlignment = [System.Windows.VerticalAlignment]::Center
     $statusText.HorizontalAlignment = [System.Windows.HorizontalAlignment]::Right
     $statusText.FontFamily = "Segoe UI"
-    $statusText.FontSize = 9
-    $statusText.FontWeight = [System.Windows.FontWeights]::Bold
-    $statusText.Foreground = New-Brush $style.Accent
+    $statusText.FontSize = 10
+    $statusText.Foreground = New-Brush "#8A94A6"
     [System.Windows.Controls.Grid]::SetColumn($statusText, 2)
 
     $tooltip = "id: $shortId`npid: $($record.ownerPid)`nwindow: $($record.focusWindowHandle)`nworkspace: $($record.workspace)"
     $row.ToolTip = $tooltip
 
-    $grid.Children.Add($bar) | Out-Null
+    $grid.Children.Add($dot) | Out-Null
     $grid.Children.Add($label) | Out-Null
     $grid.Children.Add($statusText) | Out-Null
     $row.Child = $grid
 
-    $row.Add_MouseEnter({ $this.BorderBrush = New-Brush "#C9D4E4" })
-    $row.Add_MouseLeave({ $this.BorderBrush = New-Brush "#E4EAF2" })
+    $row.Add_MouseEnter({ $this.Background = New-Brush "#F5F7FA" })
+    $row.Add_MouseLeave({ $this.Background = [System.Windows.Media.Brushes]::Transparent })
     $row.Add_PreviewMouseLeftButtonDown({
         $_.Handled = $true
         Focus-ClaudeSession $this.Tag
@@ -225,48 +224,48 @@ function Update-Dashboard {
     }
 
     $visibleRows = [Math]::Min($records.Count, 10)
-    $RowsScroll.MaxHeight = [double](31 * $visibleRows)
-    $window.Height = [double](74 + (31 * $visibleRows))
+    $RowsScroll.MaxHeight = [double](32 * $visibleRows)
+    $window.Height = [double](58 + (32 * $visibleRows))
 
     $countText.Text = [string]$records.Count
     $firstStyle = Get-StateStyle ([string]$records[0].state)
-    $outer.BorderBrush = New-Brush $firstStyle.Accent
-    $dot.Fill = New-Brush $firstStyle.Accent
+    $outer.BorderBrush = New-Brush "#E6EAF0"
+    $headerDot.Fill = New-Brush $firstStyle.Accent
 }
 
 [xml]$xaml = @"
 <Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Width="252" Height="105"
+        Width="236" Height="90"
         WindowStyle="None" ResizeMode="NoResize"
         AllowsTransparency="True" Background="Transparent"
         Topmost="True" ShowInTaskbar="False"
         SnapsToDevicePixels="False" UseLayoutRounding="True">
     <Grid Margin="6">
-        <Border x:Name="Outer" CornerRadius="20" BorderThickness="3" Background="#F7FAFF" BorderBrush="#0A84FF">
+        <Border x:Name="Outer" CornerRadius="18" BorderThickness="1" Background="#FBFCFE" BorderBrush="#E6EAF0">
             <Border.Effect>
-                <DropShadowEffect Color="#330A84FF" BlurRadius="12" ShadowDepth="1" Opacity="0.35" />
+                <DropShadowEffect Color="#22000000" BlurRadius="18" ShadowDepth="2" Opacity="0.22" />
             </Border.Effect>
-            <Grid Margin="16,12,14,12">
+            <Grid Margin="12,10,10,10">
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="25" />
+                    <RowDefinition Height="22" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="16" />
+                    <ColumnDefinition Width="14" />
                     <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="32" />
                     <ColumnDefinition Width="24" />
+                    <ColumnDefinition Width="22" />
                 </Grid.ColumnDefinitions>
 
-                <Ellipse x:Name="Dot" Grid.Row="0" Grid.Column="0" Width="10" Height="10" VerticalAlignment="Center" Fill="#0A84FF" />
-                <TextBlock Grid.Row="0" Grid.Column="1" Text="Claude Sessions" VerticalAlignment="Center"
-                           FontFamily="Segoe UI" FontSize="13" Foreground="#596273" />
+                <Ellipse x:Name="HeaderDot" Grid.Row="0" Grid.Column="0" Width="7" Height="7" VerticalAlignment="Center" Fill="#3B82F6" />
+                <TextBlock Grid.Row="0" Grid.Column="1" Text="Claude" VerticalAlignment="Center"
+                           FontFamily="Segoe UI" FontSize="12" FontWeight="SemiBold" Foreground="#344054" />
                 <TextBlock x:Name="CountText" Grid.Row="0" Grid.Column="2" Text="0" VerticalAlignment="Center" HorizontalAlignment="Center"
-                           FontFamily="Segoe UI" FontSize="12" FontWeight="Bold" Foreground="#697386" />
+                           FontFamily="Segoe UI" FontSize="11" Foreground="#98A2B3" />
                 <TextBlock x:Name="CloseButton" Grid.Row="0" Grid.Column="3" Text="x"
                            VerticalAlignment="Center" HorizontalAlignment="Center"
-                           FontFamily="Segoe UI" FontSize="14" Foreground="#A4ADBA"
+                           FontFamily="Segoe UI" FontSize="13" Foreground="#B4BBC6"
                            Cursor="Hand" Padding="6,1,6,3" />
 
                 <ScrollViewer x:Name="RowsScroll" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="4"
@@ -282,7 +281,7 @@ function Update-Dashboard {
 $reader = New-Object System.Xml.XmlNodeReader $xaml
 $window = [Windows.Markup.XamlReader]::Load($reader)
 $outer = $window.FindName("Outer")
-$dot = $window.FindName("Dot")
+$headerDot = $window.FindName("HeaderDot")
 $countText = $window.FindName("CountText")
 $closeButton = $window.FindName("CloseButton")
 $RowsScroll = $window.FindName("RowsScroll")
