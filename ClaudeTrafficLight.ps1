@@ -10,6 +10,10 @@ public static class ClaudeTrafficLightWin32 {
     public static extern bool SetForegroundWindow(IntPtr hWnd);
     [DllImport("user32.dll")]
     public static extern bool ShowWindowAsync(IntPtr hWnd, int nCmdShow);
+    [DllImport("user32.dll")]
+    public static extern bool IsWindow(IntPtr hWnd);
+    [DllImport("user32.dll")]
+    public static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
 }
 "@
 
@@ -77,6 +81,22 @@ function Get-SessionRecords {
 }
 
 function Focus-ClaudeSession([object]$record) {
+    if ($record.PSObject.Properties.Name -contains "focusWindowHandle" -and $record.focusWindowHandle) {
+        try {
+            $storedHandle = [IntPtr]([int64]$record.focusWindowHandle)
+            if ($storedHandle -ne [IntPtr]::Zero -and [ClaudeTrafficLightWin32]::IsWindow($storedHandle)) {
+                $window.Topmost = $false
+                [ClaudeTrafficLightWin32]::ShowWindowAsync($storedHandle, 9) | Out-Null
+                [ClaudeTrafficLightWin32]::SetWindowPos($storedHandle, [IntPtr]::Zero, 0, 0, 0, 0, 0x0043) | Out-Null
+                [ClaudeTrafficLightWin32]::SetForegroundWindow($storedHandle) | Out-Null
+                $window.Topmost = $true
+                return
+            }
+        } catch {
+            $window.Topmost = $true
+        }
+    }
+
     $candidatePids = @()
     foreach ($pidName in @("ownerPid", "parentPid")) {
         if ($record.PSObject.Properties.Name -contains $pidName -and $record.$pidName) {
@@ -103,11 +123,16 @@ function Focus-ClaudeSession([object]$record) {
         try {
             $process = Get-Process -Id $candidatePid -ErrorAction Stop
             if ($process.MainWindowHandle -and $process.MainWindowHandle -ne [IntPtr]::Zero) {
+                $window.Topmost = $false
                 [ClaudeTrafficLightWin32]::ShowWindowAsync($process.MainWindowHandle, 9) | Out-Null
+                [ClaudeTrafficLightWin32]::SetWindowPos($process.MainWindowHandle, [IntPtr]::Zero, 0, 0, 0, 0, 0x0043) | Out-Null
                 [ClaudeTrafficLightWin32]::SetForegroundWindow($process.MainWindowHandle) | Out-Null
+                $window.Topmost = $true
                 return
             }
-        } catch {}
+        } catch {
+            $window.Topmost = $true
+        }
     }
 }
 
@@ -161,7 +186,7 @@ function New-SessionRow([object]$record, [int]$index) {
     $statusText.Foreground = New-Brush $style.Accent
     [System.Windows.Controls.Grid]::SetColumn($statusText, 2)
 
-    $tooltip = "id: $shortId`npid: $($record.ownerPid)`nworkspace: $($record.workspace)"
+    $tooltip = "id: $shortId`npid: $($record.ownerPid)`nwindow: $($record.focusWindowHandle)`nworkspace: $($record.workspace)"
     $row.ToolTip = $tooltip
 
     $grid.Children.Add($bar) | Out-Null

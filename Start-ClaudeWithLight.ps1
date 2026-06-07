@@ -1,5 +1,14 @@
 $ClaudeArgs = @($args)
 
+Add-Type @"
+using System;
+using System.Runtime.InteropServices;
+public static class ClaudeTrafficLightLauncherWin32 {
+    [DllImport("user32.dll")]
+    public static extern IntPtr GetForegroundWindow();
+}
+"@
+
 function Find-ClaudeExe {
     $commands = @(Get-Command claude.exe -ErrorAction SilentlyContinue)
     foreach ($command in $commands) {
@@ -40,6 +49,7 @@ function Write-Instance {
         id = $sessionId
         ownerPid = $PID
         parentPid = $parentPid
+        focusWindowHandle = $focusWindowHandle
         state = $State
         color = $Color
         title = $title
@@ -77,6 +87,7 @@ $debugFile = Join-Path $logsDir "debug-$sessionId.log"
 $createdAt = (Get-Date).ToString("o")
 $parentPid = $null
 try { $parentPid = (Get-CimInstance Win32_Process -Filter "ProcessId=$PID").ParentProcessId } catch {}
+$focusWindowHandle = [int64][ClaudeTrafficLightLauncherWin32]::GetForegroundWindow()
 
 $workspaceLeaf = Split-Path -Leaf $workspace
 if ([string]::IsNullOrWhiteSpace($workspaceLeaf)) { $workspaceLeaf = $workspace }
